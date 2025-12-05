@@ -199,7 +199,7 @@ def plot_preprocessing_steps(results: Dict[str, np.ndarray], fs: int = 100,
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("ML_eng/mock_ppg_dataset.csv")
+    df = pd.read_csv("mock_ppg_dataset.csv")
     # Process 'signal' column similar to df_ppg
     df_ppg = df['signal'].str.split(' ', expand=True)
     df_ppg = df_ppg.apply(pd.to_numeric, errors='coerce')
