@@ -17,10 +17,6 @@ from typing import Tuple, Dict, List
 import warnings
 warnings.filterwarnings('ignore')
 
-# ============================================================================
-# SIGNAL FILTERING FUNCTIONS (Copied from notebook)
-# ============================================================================
-
 def bandpass_filter(data, lowcut, highcut, fs, order=5):
     nyquist = 0.5 * fs
     low = lowcut / nyquist
@@ -62,9 +58,6 @@ def standardize_signal(data):
         return np.zeros_like(data)
     return (data - mean_val) / std_val
 
-# ============================================================================
-# COMPLETE PREPROCESSING PIPELINE (Copied from notebook)
-# ============================================================================
 
 def preprocess_ppg_signal(data: np.ndarray, fs: int = 100,
                           verbose: bool = False) -> Dict[str, np.ndarray]:
@@ -97,9 +90,6 @@ def preprocess_ppg_signal(data: np.ndarray, fs: int = 100,
 
     return results
 
-# ============================================================================
-# FEATURE EXTRACTION FUNCTIONS (Copied from notebook)
-# ============================================================================
 
 def extract_features(signal_data: np.ndarray, fs: int = 100) -> Dict[str, float]:
     features = {}
@@ -162,9 +152,6 @@ def extract_features(signal_data: np.ndarray, fs: int = 100) -> Dict[str, float]
 
     return features
 
-# ============================================================================
-# VISUALIZATION FUNCTIONS (Copied from notebook)
-# ============================================================================
 
 def plot_preprocessing_steps(results: Dict[str, np.ndarray], fs: int = 100,
                              segment_id: str = ""):
@@ -193,14 +180,11 @@ def plot_preprocessing_steps(results: Dict[str, np.ndarray], fs: int = 100,
     plt.tight_layout()
     return fig
 
-# ============================================================================
-# LOAD DATA AND MODELS
-# ============================================================================
 
 @st.cache_data
 def load_data():
     df = pd.read_csv("mock_ppg_dataset.csv")
-    # Process 'signal' column similar to df_ppg
+ 
     df_ppg = df['signal'].str.split(' ', expand=True)
     df_ppg = df_ppg.apply(pd.to_numeric, errors='coerce')
     df_ppg = df_ppg.add_prefix('ppg_')
@@ -216,12 +200,7 @@ def load_model_and_encoder():
 df = load_data()
 model_xgb, label_encoder = load_model_and_encoder()
 
-fs = 100 # Sampling frequency, consistent with notebook
-
-# ============================================================================
-# STREAMLIT UI AND LOGIC
-# ============================================================================
-
+fs = 100 
 st.sidebar.header("Signal Selection")
 segment_ids = df['id'].tolist()
 selected_segment_id = st.sidebar.selectbox(
@@ -229,7 +208,7 @@ selected_segment_id = st.sidebar.selectbox(
     segment_ids
 )
 
-# Get the raw signal data for the selected segment
+
 selected_row = df[df['id'] == selected_segment_id].iloc[0]
 raw_signal_data = selected_row.filter(like='ppg_').to_numpy().astype(float)
 
@@ -243,11 +222,9 @@ ax_raw.set_title("Raw PPG Signal")
 st.pyplot(fig_raw)
 
 
-# Apply preprocessing and extract features
 processed_results = preprocess_ppg_signal(raw_signal_data, fs=fs, verbose=False)
 extracted_features = extract_features(processed_results['final'], fs=fs)
 
-# Convert extracted features to a DataFrame for display
 features_df_display = pd.DataFrame([extracted_features]).T.rename(columns={0: "Value"})
 
 
@@ -257,12 +234,9 @@ st.pyplot(plot_preprocessing_steps(processed_results, fs=fs, segment_id=selected
 st.subheader("Extracted Features")
 st.dataframe(features_df_display)
 
-# Make prediction using the trained model
-# The model expects a 2D array, so convert the single row of features
 features_for_prediction = pd.DataFrame([extracted_features])
 prediction_numeric = model_xgb.predict(features_for_prediction)
 
-# Convert numerical prediction back to original label
 prediction_label = label_encoder.inverse_transform(prediction_numeric)[0]
 
 st.subheader("Signal Quality Prediction")
